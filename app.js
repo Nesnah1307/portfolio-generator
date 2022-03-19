@@ -1,6 +1,6 @@
-const inquirer = require('inquirer');
+const { writeFile, copyFile } = require('./utils/generate-site.js');
 
-const fs = require('fs');
+const inquirer = require('inquirer');
 
 const generatePage = require('./src/page-template.js');
 
@@ -65,7 +65,7 @@ const promptProject = portfolioData => {
     `);
     // if there is no 'projects' array property, create one
     if (!portfolioData.projects) {
-    portfolioData.projects = [];
+        portfolioData.projects = [];
     }
     return inquirer.prompt([
         {
@@ -79,7 +79,7 @@ const promptProject = portfolioData => {
                     console.log("Please enter your project's name!");
                     return false;
                 }
-            } 
+            }
         },
         {
             type: 'input',
@@ -126,25 +126,34 @@ const promptProject = portfolioData => {
             default: false
         }
     ])
-    .then(projectData => {
-        portfolioData.projects.push(projectData);
-        if (projectData.confirmAddProject) {
-            return promptProject(portfolioData);
-        } else {
-            return portfolioData;
-        }
-    });
+        .then(projectData => {
+            portfolioData.projects.push(projectData);
+            if (projectData.confirmAddProject) {
+                return promptProject(portfolioData);
+            } else {
+                return portfolioData;
+            }
+        });
 };
 
 promptUser()
     .then(promptProject)
     .then(portfolioData => {
-        const pageHTML = generatePage(portfolioData);
-
-        fs.writeFile('./index.html', pageHTML, err => {
-            if (err) throw err;
+       return generatePage(portfolioData);
+    })
+    .then(pageHTML => {
+        return writeFile(pageHTML);
+    })
+    .then(writeFileResponse => {
+        console.log(writeFileResponse);
+        return copyFile();
+    })
+    .then(copyFileResponse => {
+        console.log(copyFileResponse);
+    })
+    .catch(err => {
+        console.log(err);
     });
-});
 
 
 
